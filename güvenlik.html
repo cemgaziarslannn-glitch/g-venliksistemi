@@ -6,66 +6,87 @@
 <title>CGA Güvenlik Sistemi - Güvenlik Paneli</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body { margin:0; font-family:'Montserrat', sans-serif; background: linear-gradient(135deg, #2c3e50, #34495e); color:#ecf0f1; }
-.container { display: flex; max-width: 1200px; margin: 20px auto; padding: 20px; gap: 20px; }
-.left-panel { flex: 2; }
-.right-panel { flex: 1; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); height: 600px; display:flex; flex-direction: column; }
-.right-panel h2 { margin-top:0; }
-.history-filter { margin-bottom: 10px; }
-.history-list { flex:1; overflow-y:auto; padding-right:10px; }
-.devriye-item { margin-bottom:10px; padding:10px; background: rgba(0,0,0,0.15); border-radius:10px; font-size:14px; }
-h1 { text-align:center; margin-bottom:20px; }
-button { padding:10px 16px; margin:4px; border-radius:10px; border:none; cursor:pointer; font-weight:600; transition:0.3s; }
+body { margin:0; font-family:'Montserrat', sans-serif; background: linear-gradient(135deg, #2c3e50, #34495e); color:#ecf0f1; overflow-x:hidden; }
+.container { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:20px; transition: transform 0.3s ease; }
+header { text-align:center; margin-bottom:20px; }
+button { padding:12px 18px; margin:6px; border-radius:10px; border:none; cursor:pointer; font-weight:600; transition:0.3s; }
 button:hover { opacity:0.9; }
 #nobetAlBtn { background-color: #2980b9; color:#fff; }
 #nobetBitirBtn { background-color: #c0392b; color:#fff; }
 #devriyeStartBtn { background-color: #2980b9; color:#fff; }
 #devriyeEndBtn { background-color: #c0392b; color:#fff; }
-.qr-list button.qrBtn { background-color: #7f8c8d; color:#fff; margin-right:10px; }
+.status { margin:12px 0; padding:12px; background: rgba(0,0,0,0.2); border-radius:10px; width:100%; text-align:center; font-size:16px; }
+.panel { background: rgba(255,255,255,0.05); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.4); width:100%; margin-top:20px; }
+.panel h2 { margin-top:0; text-align:center; }
+.qr-list div { margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
+.qr-list button.qrBtn { background-color: #7f8c8d; color:#fff; flex-shrink:0; width:100px; }
 .qr-list button.qrBtn.read { background-color:#27ae60; }
-.panel { background: rgba(255,255,255,0.05); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.4); margin-top:20px; }
-.panel h2 { margin-top:0; }
-.status { margin:10px 0; padding:10px; background: rgba(0,0,0,0.2); border-radius:10px; }
-.qr-list div { margin-bottom:10px; display:flex; align-items:center; }
-.qr-list span { flex:1; }
 input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; }
+
+/* Tek ikonlu sağ panel */
+#historyToggleBtn {
+  position:fixed; top:20px; right:20px; background:#f39c12; color:#fff;
+  border:none; border-radius:50%; width:50px; height:50px;
+  font-size:24px; z-index:1001; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+
+#historyPanel {
+  position:fixed; top:0; right:-100%; /* tamamen ekrandan dışarı */
+  width:320px; height:100%;
+  background: rgba(44,62,80,0.95);
+  color:#fff;
+  box-shadow: -6px 0 20px rgba(0,0,0,0.4);
+  padding:20px;
+  transition: right 0.3s ease;
+  overflow-y:auto;
+  z-index:1000;
+}
+
+#historyPanel h2 { text-align:center; margin-top:0; }
+
+@media (min-width:600px){
+  .container { max-width:600px; margin:auto; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="left-panel">
+
+<!-- Tek ikon: Devriye Geçmişi -->
+<button id="historyToggleBtn">&#128221;</button> <!-- Liste ikonu (📑) -->
+
+<div id="historyPanel">
+  <h2>Devriye Geçmişi</h2>
+  <label for="filterDate">Tarih Filtrele:</label>
+  <input type="date" id="filterDate">
+  <div id="devriyeHistory"></div>
+</div>
+
+<div class="container" id="mainContainer">
+  <header>
     <h1>CGA Güvenlik Sistemi - Güvenlik Paneli</h1>
+  </header>
 
-    <!-- Nöbet -->
-    <button id="nobetAlBtn">Nöbeti Teslim Al</button>
-    <button id="nobetBitirBtn" disabled>Nöbeti Teslim Ettim</button>
-    <div class="status" id="nobetStatus">Henüz nöbette değilsiniz.</div>
+  <!-- Nöbet -->
+  <button id="nobetAlBtn">Nöbeti Teslim Al</button>
+  <button id="nobetBitirBtn" disabled>Nöbeti Teslim Ettim</button>
+  <div class="status" id="nobetStatus">Henüz nöbette değilsiniz.</div>
 
-    <!-- Devriye -->
-    <div class="panel">
-      <h2>Devriye</h2>
-      <button id="devriyeStartBtn">Devriye Başlat</button>
-      <button id="devriyeEndBtn" disabled>Devriyeyi Bitir</button>
-      <div class="status" id="devriyeStatus">Devriye başlamadı.</div>
+  <!-- Devriye -->
+  <div class="panel">
+    <h2>Devriye</h2>
+    <button id="devriyeStartBtn">Devriye Başlat</button>
+    <button id="devriyeEndBtn" disabled>Devriyeyi Bitir</button>
+    <div class="status" id="devriyeStatus">Devriye başlamadı.</div>
 
-      <h3>Devriye Noktaları</h3>
-      <div class="qr-list">
-        <div><button class="qrBtn" data-point="Bahçe">QR Okut</button><span>Bahçe</span></div>
-        <div><button class="qrBtn" data-point="Otopark">QR Okut</button><span>Otopark</span></div>
-        <div><button class="qrBtn" data-point="Arka Bahçe">QR Okut</button><span>Arka Bahçe</span></div>
-        <div><button class="qrBtn" data-point="Giriş Kapısı">QR Okut</button><span>Giriş Kapısı</span></div>
-        <div><button class="qrBtn" data-point="Yan Bahçe">QR Okut</button><span>Yan Bahçe</span></div>
-      </div>
+    <h3>Devriye Noktaları</h3>
+    <div class="qr-list">
+      <div><button class="qrBtn" data-point="Bahçe">QR Okut</button><span>Bahçe</span></div>
+      <div><button class="qrBtn" data-point="Otopark">QR Okut</button><span>Otopark</span></div>
+      <div><button class="qrBtn" data-point="Arka Bahçe">QR Okut</button><span>Arka Bahçe</span></div>
+      <div><button class="qrBtn" data-point="Giriş Kapısı">QR Okut</button><span>Giriş Kapısı</span></div>
+      <div><button class="qrBtn" data-point="Yan Bahçe">QR Okut</button><span>Yan Bahçe</span></div>
     </div>
-  </div>
-
-  <div class="right-panel">
-    <h2>Devriye Geçmişi</h2>
-    <div class="history-filter">
-      <label for="filterDate">Tarih Filtrele:</label>
-      <input type="date" id="filterDate">
-    </div>
-    <div class="history-list" id="devriyeHistory"></div>
   </div>
 </div>
 
@@ -85,7 +106,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Login kullanıcı bilgisi
 const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 if(!currentUser || currentUser.type!=='security'){
   alert("Güvenlik kullanıcı ile giriş yapmalısınız!");
@@ -101,8 +121,12 @@ const devriyeStatus = document.getElementById("devriyeStatus");
 const qrButtons = document.querySelectorAll('.qrBtn');
 const devriyeHistoryEl = document.getElementById("devriyeHistory");
 const filterDate = document.getElementById("filterDate");
+const historyToggleBtn = document.getElementById("historyToggleBtn");
+const historyPanel = document.getElementById("historyPanel");
+const mainContainer = document.getElementById("mainContainer");
 
 let devriyeStarted=false, devriyeStartTime=null, readPoints=[], allDevriyeHistory=[];
+let historyOpen=false;
 
 // Nöbet al
 nobetAlBtn.addEventListener('click', ()=>{
@@ -170,7 +194,7 @@ devriyeEndBtn.addEventListener('click', ()=>{
   qrButtons.forEach(btn=>{ btn.classList.remove('read'); btn.nextElementSibling.innerText=btn.dataset.point; });
 });
 
-// Devriye geçmişini dinle (kendi kullanıcı)
+// Devriye geçmişini dinle
 onValue(ref(db,'devriyeHistory/'+currentUser.username), snapshot=>{
   const val = snapshot.val();
   allDevriyeHistory = val ? Object.values(val).sort((a,b)=>b.timestamp-a.timestamp):[];
@@ -184,6 +208,11 @@ function renderDevriyeHistory(){
   filtered.forEach(d=>{
     const item=document.createElement('div');
     item.classList.add('devriye-item');
+    item.style.marginBottom='10px';
+    item.style.padding='10px';
+    item.style.background='rgba(44,62,80,0.6)';
+    item.style.borderRadius='10px';
+    item.style.fontSize='14px';
     item.innerHTML=`<strong>Tarih:</strong> ${d.displayDate}<br>
                     <strong>Başlangıç:</strong> ${d.start}<br>
                     <strong>Bitiş:</strong> ${d.end}<br>
@@ -201,6 +230,19 @@ onValue(ref(db,'nobetDurumu/'+currentUser.username), snapshot=>{
     nobetStatus.innerText=val.status==='started'?`${val.user} şu anda nöbette.`:'Henüz nöbette değilsiniz.';
   }
 });
+
+// Tek ikon ile aç/kapa
+historyToggleBtn.addEventListener('click', ()=>{
+  if(!historyOpen){
+    historyPanel.style.right='0'; // ekrana gel
+    mainContainer.style.transform='translateX(-270px)';
+  } else {
+    historyPanel.style.right='-100%'; // tamamen gizle
+    mainContainer.style.transform='translateX(0)';
+  }
+  historyOpen = !historyOpen;
+});
 </script>
+
 </body>
 </html>
