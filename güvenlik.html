@@ -128,20 +128,37 @@ const mainContainer = document.getElementById("mainContainer");
 let devriyeStarted=false, devriyeStartTime=null, readPoints=[], allDevriyeHistory=[];
 let historyOpen=false;
 
+// Nöbet durumu referansı
+const nobetRef = ref(db,'nobetDurumu/'+currentUser.username);
+
+// Nöbet durumunu anlık dinle ve butonları güncelle
+onValue(nobetRef, snapshot=>{
+  const val = snapshot.val();
+  if(val){
+    if(val.status === 'started'){
+      nobetStatus.innerText = `${val.user} şu anda nöbette.`;
+      nobetAlBtn.disabled = true;
+      nobetBitirBtn.disabled = false;
+    } else if(val.status === 'ended'){
+      nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
+      nobetAlBtn.disabled = false;
+      nobetBitirBtn.disabled = true;
+    }
+  } else {
+    nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
+    nobetAlBtn.disabled = false;
+    nobetBitirBtn.disabled = true;
+  }
+});
+
 // Nöbet al
 nobetAlBtn.addEventListener('click', ()=>{
-  set(ref(db,'nobetDurumu/'+currentUser.username), { user: currentUser.name, status:'started' });
-  nobetStatus.innerText = `${currentUser.name} şu anda nöbette.`;
-  nobetAlBtn.disabled=true;
-  nobetBitirBtn.disabled=false;
+  set(nobetRef, { user: currentUser.name, status:'started' });
 });
 
 // Nöbet bitir
 nobetBitirBtn.addEventListener('click', ()=>{
-  set(ref(db,'nobetDurumu/'+currentUser.username), { user: currentUser.name, status:'ended' });
-  nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
-  nobetAlBtn.disabled=false;
-  nobetBitirBtn.disabled=true;
+  set(nobetRef, { user: currentUser.name, status:'ended' });
 });
 
 // Devriye başlat
@@ -223,26 +240,17 @@ function renderDevriyeHistory(){
 }
 filterDate.addEventListener('change', renderDevriyeHistory);
 
-// Nöbet durumunu anlık dinle
-onValue(ref(db,'nobetDurumu/'+currentUser.username), snapshot=>{
-  const val = snapshot.val();
-  if(val){
-    nobetStatus.innerText=val.status==='started'?`${val.user} şu anda nöbette.`:'Henüz nöbette değilsiniz.';
-  }
-});
-
 // Tek ikon ile aç/kapa
 historyToggleBtn.addEventListener('click', ()=>{
   if(!historyOpen){
-    historyPanel.style.right='0'; // ekrana gel
+    historyPanel.style.right='0';
     mainContainer.style.transform='translateX(-270px)';
   } else {
-    historyPanel.style.right='-100%'; // tamamen gizle
+    historyPanel.style.right='-100%';
     mainContainer.style.transform='translateX(0)';
   }
-  historyOpen = !historyOpen;
+  historyOpen=!historyOpen;
 });
 </script>
-
 </body>
 </html>
