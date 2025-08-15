@@ -113,7 +113,14 @@ onValue(ref(db,'nobetDurumu'), snapshot=>{
       if(val[key].status==='started'){
         const userName = val[key].user;
         const userRef = ref(db,'users/' + userName);
+
+        // Kullanıcının var olup olmadığını kontrol ediyoruz
         onValue(userRef, userSnap=>{
+          if(!userSnap.exists()){
+            // Kullanıcı silinmiş, güvenlik kutusunu gösterme
+            return;
+          }
+
           const userData = userSnap.val();
           const phone = userData?.phone || '';
           
