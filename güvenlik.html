@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGA Güvenlik Sistemi - Güvenlik Paneli</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Montserrat', sans-serif; background: linear-gradient(135deg, #2c3e50, #34495e); color:#ecf0f1; }
+.container { display: flex; max-width: 1200px; margin: 20px auto; padding: 20px; gap: 20px; }
+.left-panel { flex: 2; }
+.right-panel { flex: 1; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,0.4); height: 600px; display:flex; flex-direction: column; }
+.right-panel h2 { margin-top:0; }
+.history-filter { margin-bottom: 10px; }
+.history-list { flex:1; overflow-y:auto; padding-right:10px; }
+.devriye-item { margin-bottom:10px; padding:10px; background: rgba(0,0,0,0.15); border-radius:10px; font-size:14px; }
+h1 { text-align:center; margin-bottom:20px; }
+button { padding:10px 16px; margin:4px; border-radius:10px; border:none; cursor:pointer; font-weight:600; transition:0.3s; }
+button:hover { opacity:0.9; }
+#nobetAlBtn { background-color: #2980b9; color:#fff; }
+#nobetBitirBtn { background-color: #c0392b; color:#fff; }
+#devriyeStartBtn { background-color: #2980b9; color:#fff; }
+#devriyeEndBtn { background-color: #c0392b; color:#fff; }
+.qr-list button.qrBtn { background-color: #7f8c8d; color:#fff; margin-right:10px; }
+.qr-list button.qrBtn.read { background-color:#27ae60; }
+.panel { background: rgba(255,255,255,0.05); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.4); margin-top:20px; }
+.panel h2 { margin-top:0; }
+.status { margin:10px 0; padding:10px; background: rgba(0,0,0,0.2); border-radius:10px; }
+.qr-list div { margin-bottom:10px; display:flex; align-items:center; }
+.qr-list span { flex:1; }
+input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left-panel">
+    <h1>CGA Güvenlik Sistemi - Güvenlik Paneli</h1>
+
+    <!-- Nöbet -->
+    <button id="nobetAlBtn">Nöbeti Teslim Al</button>
+    <button id="nobetBitirBtn" disabled>Nöbeti Teslim Ettim</button>
+    <div class="status" id="nobetStatus">Henüz nöbette değilsiniz.</div>
+
+    <!-- Devriye -->
+    <div class="panel">
+      <h2>Devriye</h2>
+      <button id="devriyeStartBtn">Devriye Başlat</button>
+      <button id="devriyeEndBtn" disabled>Devriyeyi Bitir</button>
+      <div class="status" id="devriyeStatus">Devriye başlamadı.</div>
+
+      <h3>Devriye Noktaları</h3>
+      <div class="qr-list">
+        <div><button class="qrBtn" data-point="Bahçe">QR Okut</button><span>Bahçe</span></div>
+        <div><button class="qrBtn" data-point="Otopark">QR Okut</button><span>Otopark</span></div>
+        <div><button class="qrBtn" data-point="Arka Bahçe">QR Okut</button><span>Arka Bahçe</span></div>
+        <div><button class="qrBtn" data-point="Giriş Kapısı">QR Okut</button><span>Giriş Kapısı</span></div>
+        <div><button class="qrBtn" data-point="Yan Bahçe">QR Okut</button><span>Yan Bahçe</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <h2>Devriye Geçmişi</h2>
+    <div class="history-filter">
+      <label for="filterDate">Tarih Filtrele:</label>
+      <input type="date" id="filterDate">
+    </div>
+    <div class="history-list" id="devriyeHistory"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBX0PUaisTG-TvIOCCtKzSiI3e7yhLu3ik",
+  authDomain: "guzelailemchat.firebaseapp.com",
+  databaseURL: "https://guzelailemchat-default-rtdb.firebaseio.com",
+  projectId: "guzelailemchat",
+  storageBucket: "guzelailemchat.firebasestorage.app",
+  messagingSenderId: "353492004109",
+  appId: "1:353492004109:web:3a668422a563e6951cd444"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Login kullanıcı bilgisi
+const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+if(!currentUser || currentUser.type!=='security'){
+  alert("Güvenlik kullanıcı ile giriş yapmalısınız!");
+  window.location.href="login.html";
+}
+
+const nobetAlBtn = document.getElementById("nobetAlBtn");
+const nobetBitirBtn = document.getElementById("nobetBitirBtn");
+const nobetStatus = document.getElementById("nobetStatus");
+const devriyeStartBtn = document.getElementById("devriyeStartBtn");
+const devriyeEndBtn = document.getElementById("devriyeEndBtn");
+const devriyeStatus = document.getElementById("devriyeStatus");
+const qrButtons = document.querySelectorAll('.qrBtn');
+const devriyeHistoryEl = document.getElementById("devriyeHistory");
+const filterDate = document.getElementById("filterDate");
+
+let devriyeStarted=false, devriyeStartTime=null, readPoints=[], allDevriyeHistory=[];
+
+// Nöbet al
+nobetAlBtn.addEventListener('click', ()=>{
+  set(ref(db,'nobetDurumu/'+currentUser.username), { user: currentUser.name, status:'started' });
+  nobetStatus.innerText = `${currentUser.name} şu anda nöbette.`;
+  nobetAlBtn.disabled=true;
+  nobetBitirBtn.disabled=false;
+});
+
+// Nöbet bitir
+nobetBitirBtn.addEventListener('click', ()=>{
+  set(ref(db,'nobetDurumu/'+currentUser.username), { user: currentUser.name, status:'ended' });
+  nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
+  nobetAlBtn.disabled=false;
+  nobetBitirBtn.disabled=true;
+});
+
+// Devriye başlat
+devriyeStartBtn.addEventListener('click', ()=>{
+  if(devriyeStarted) return;
+  devriyeStarted=true;
+  devriyeStartTime=new Date();
+  devriyeStatus.innerText='Devriye başladı: '+devriyeStartTime.toLocaleTimeString();
+  devriyeEndBtn.disabled=false;
+  readPoints=[];
+  qrButtons.forEach(btn=>{ btn.classList.remove('read'); btn.nextElementSibling.innerText=btn.dataset.point; });
+});
+
+// QR okutma
+qrButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    if(devriyeStarted && !readPoints.includes(btn.dataset.point)){
+      readPoints.push(btn.dataset.point);
+      btn.classList.add('read');
+      btn.nextElementSibling.innerText=btn.dataset.point+" - Tamamlandı";
+      devriyeStatus.innerText=`Okutulan noktalar: ${readPoints.join(', ')}`;
+    }
+  });
+});
+
+// Devriyeyi bitir
+devriyeEndBtn.addEventListener('click', ()=>{
+  if(!devriyeStarted) return;
+  const devriyeEndTime=new Date();
+  let statusText = readPoints.length===qrButtons.length ? "Tam devriye":"Eksik devriye";
+  const weekday = devriyeStartTime.toLocaleDateString('tr-TR',{ weekday:'long' });
+  const dateText = `${devriyeStartTime.toLocaleDateString()} (${weekday.charAt(0).toUpperCase()+weekday.slice(1)})`;
+
+  const devriyeRecord = {
+    user: currentUser.username,
+    name: currentUser.name,
+    date: devriyeStartTime.toISOString().split('T')[0],
+    displayDate: dateText,
+    start: devriyeStartTime.toLocaleTimeString(),
+    end: devriyeEndTime.toLocaleTimeString(),
+    status: statusText,
+    points:[...readPoints],
+    timestamp: serverTimestamp()
+  };
+
+  push(ref(db,'devriyeHistory/'+currentUser.username), devriyeRecord);
+  devriyeStarted=false;
+  devriyeEndBtn.disabled=true;
+  devriyeStatus.innerText='Devriye tamamlandı.';
+  qrButtons.forEach(btn=>{ btn.classList.remove('read'); btn.nextElementSibling.innerText=btn.dataset.point; });
+});
+
+// Devriye geçmişini dinle (kendi kullanıcı)
+onValue(ref(db,'devriyeHistory/'+currentUser.username), snapshot=>{
+  const val = snapshot.val();
+  allDevriyeHistory = val ? Object.values(val).sort((a,b)=>b.timestamp-a.timestamp):[];
+  renderDevriyeHistory();
+});
+
+function renderDevriyeHistory(){
+  const selectedDate = filterDate.value;
+  devriyeHistoryEl.innerHTML='';
+  const filtered = selectedDate ? allDevriyeHistory.filter(d=>d.date===selectedDate):allDevriyeHistory;
+  filtered.forEach(d=>{
+    const item=document.createElement('div');
+    item.classList.add('devriye-item');
+    item.innerHTML=`<strong>Tarih:</strong> ${d.displayDate}<br>
+                    <strong>Başlangıç:</strong> ${d.start}<br>
+                    <strong>Bitiş:</strong> ${d.end}<br>
+                    <strong>Durum:</strong> ${d.status}<br>
+                    <strong>Noktalar:</strong> ${d.points.join(', ')}`;
+    devriyeHistoryEl.appendChild(item);
+  });
+}
+filterDate.addEventListener('change', renderDevriyeHistory);
+
+// Nöbet durumunu anlık dinle
+onValue(ref(db,'nobetDurumu/'+currentUser.username), snapshot=>{
+  const val = snapshot.val();
+  if(val){
+    nobetStatus.innerText=val.status==='started'?`${val.user} şu anda nöbette.`:'Henüz nöbette değilsiniz.';
+  }
+});
+</script>
+</body>
+</html>

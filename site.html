@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGA Güvenlik Sistemi - Site Sakini Paneli</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Montserrat', sans-serif; background: linear-gradient(135deg, #1f3c59, #2c5364); color:#ecf0f1; }
+.container { max-width: 1000px; margin:20px auto; padding:20px; }
+h1,h2 { text-align:center; margin-bottom:0; }
+.panel { background: rgba(255,255,255,0.05); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.4); margin-top:20px; }
+.status { margin-top:10px; padding:15px; background: rgba(0,0,0,0.2); border-radius:12px; font-size:15px; line-height:1.5; }
+.devriye-list { max-height:450px; overflow-y:auto; margin-top:10px; }
+.devriye-item { display:flex; flex-direction:column; background: rgba(0,0,0,0.2); border-radius:12px; margin-bottom:12px; padding:12px; transition:0.3s; }
+.devriye-item:hover { background: rgba(0,0,0,0.35); }
+.devriye-left { flex:1; min-width:180px; margin-right:10px; }
+.devriye-status { font-weight:bold; font-size:16px; text-align:center; min-width:140px; padding:8px; border-radius:12px; margin-top:10px; }
+.devriye-status.tam { background: #2ecc71; color:#fff; }
+.devriye-status.eksik { background: #e74c3c; color:#fff; }
+.devriye-points { margin-top:8px; font-size:14px; background: rgba(255,255,255,0.05); padding:6px; border-radius:8px; }
+
+/* Aktif güvenlik kutuları */
+.security-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background: rgba(0,0,0,0.2);
+  padding:8px 12px;
+  border-radius:10px;
+  margin-bottom:6px;
+  font-size:15px;
+  transition:0.3s;
+}
+.security-item:hover { background: rgba(0,0,0,0.35); }
+.security-light { width:10px; height:10px; background:#2ecc71; border-radius:50%; margin-right:10px; flex-shrink:0; }
+.security-name { font-weight:600; margin-right:10px; }
+.call-btn { background:#27ae60; color:#fff; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+.call-btn:hover { background:#2ecc71; }
+
+@media (min-width:600px){
+  .devriye-item { flex-direction: row; justify-content: space-between; align-items: center; }
+  .devriye-left { margin-right:20px; }
+  .devriye-status { margin-top:0; }
+}
+
+/* Mobil uyumlu ayarlar */
+@media (max-width:600px){
+  .security-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap:6px;
+  }
+  .call-btn {
+    align-self: flex-start;
+  }
+}
+
+input[type=date] { padding:6px; border-radius:8px; border:none; outline:none; margin-top:5px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>CGA Güvenlik Sistemi</h1>
+  <h2>Site Sakini Paneli</h2>
+
+  <!-- Güvenlik Durumu -->
+  <div class="panel">
+    <h3>Güvenlik Durumu</h3>
+    <div id="securityStatus" class="status">Yükleniyor...</div>
+  </div>
+
+  <!-- Devriye Geçmişi -->
+  <div class="panel">
+    <h3>Devriye Geçmişi</h3>
+    <label for="filterDate">Tarih Filtrele:</label>
+    <input type="date" id="filterDate">
+    <div class="devriye-list" id="devriyeHistory"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBX0PUaisTG-TvIOCCtKzSiI3e7yhLu3ik",
+  authDomain: "guzelailemchat.firebaseapp.com",
+  databaseURL: "https://guzelailemchat-default-rtdb.firebaseio.com",
+  projectId: "guzelailemchat",
+  storageBucket: "guzelailemchat.firebasestorage.app",
+  messagingSenderId: "353492004109",
+  appId: "1:353492004109:web:3a668422a563e6951cd444"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const securityStatus = document.getElementById("securityStatus");
+const devriyeHistoryEl = document.getElementById("devriyeHistory");
+const filterDate = document.getElementById("filterDate");
+
+let allDevriyeHistory = [];
+const today = new Date().toISOString().split('T')[0];
+filterDate.value = today;
+
+// Aktif güvenlikler ve “Güvenliği Ara” butonu
+onValue(ref(db,'nobetDurumu'), snapshot=>{
+  const val = snapshot.val();
+  securityStatus.innerHTML = '';
+  if(val){
+    let count=0;
+    for(const key in val){
+      if(val[key].status==='started'){
+        const userName = val[key].user;
+        const userRef = ref(db,'users/' + userName);
+        onValue(userRef, userSnap=>{
+          const userData = userSnap.val();
+          const phone = userData?.phone || '';
+          
+          const div = document.createElement('div');
+          div.classList.add('security-item');
+          div.innerHTML = `
+            <div style="display:flex; align-items:center;">
+              <div class="security-light"></div>
+              <div class="security-name">Güvenlik ${userName} Nöbette</div>
+            </div>
+            <button class="call-btn" onclick="window.location.href='tel:${phone}'">
+              📞 Güvenliği Ara
+            </button>
+          `;
+          securityStatus.appendChild(div);
+        }, {onlyOnce:true});
+        count++;
+      }
+    }
+    if(count===0) securityStatus.innerText = 'Şu anda nöbette güvenlik yok.';
+  } else {
+    securityStatus.innerText = 'Şu anda nöbette güvenlik yok.';
+  }
+});
+
+// Devriye geçmişi
+onValue(ref(db,'devriyeHistory'), snapshot=>{
+  const val = snapshot.val();
+  allDevriyeHistory = [];
+  if(val){
+    for(const userKey in val){
+      const userRecords = val[userKey];
+      for(const recordKey in userRecords){
+        const record = userRecords[recordKey];
+        allDevriyeHistory.push({
+          ...record,
+          userName: record.name
+        });
+      }
+    }
+    allDevriyeHistory.sort((a,b)=>b.timestamp - a.timestamp);
+  }
+  renderDevriyeHistory();
+});
+
+function renderDevriyeHistory(){
+  const selectedDate = filterDate.value;
+  devriyeHistoryEl.innerHTML = '';
+  const filtered = selectedDate ? allDevriyeHistory.filter(d=>d.date===selectedDate) : allDevriyeHistory;
+  
+  filtered.forEach(d=>{
+    const div = document.createElement('div');
+    div.classList.add('devriye-item');
+
+    const left = document.createElement('div');
+    left.classList.add('devriye-left');
+
+    // Sadece işaretlenmeyen noktaları göster
+    let pointsHTML = '';
+    if(d.status.toLowerCase().includes('eksik')){
+      const tumNoktalar = ["Bahçe","Otopark","Arka Bahçe","Giriş Kapısı","Yan Bahçe"];
+      const isaretlenmeyen = tumNoktalar.filter(p => !(d.points || []).includes(p));
+      pointsHTML = `<div class="devriye-points"><strong>Eksik Noktalar:</strong> ${isaretlenmeyen.join(', ')}</div>`;
+    }
+
+    // Label-değerleri flex ile yan yana, gap ile küçük boşluk
+    left.innerHTML = `
+      <div style="display:flex; gap:6px;"><strong>Güvenlik:</strong> ${d.userName}</div>
+      <div style="display:flex; gap:6px;"><strong>Tarih:</strong> ${d.displayDate}</div>
+      <div style="display:flex; gap:6px;"><strong>Başlangıç:</strong> ${d.start}</div>
+      <div style="display:flex; gap:6px;"><strong>Bitiş:</strong> ${d.end}</div>
+      ${pointsHTML}
+    `;
+
+    const status = document.createElement('div');
+    status.classList.add('devriye-status');
+    if(d.status.toLowerCase().includes('tam')){
+      status.classList.add('tam');
+      status.innerHTML = 'TAM DEVREYE<br>✅';
+    } else {
+      status.classList.add('eksik');
+      status.innerHTML = 'EKSİK DEVREYE<br>❌';
+    }
+
+    div.appendChild(left);
+    div.appendChild(status);
+    devriyeHistoryEl.appendChild(div);
+  });
+}
+
+filterDate.addEventListener('change', renderDevriyeHistory);
+</script>
+
+</body>
+</html>
