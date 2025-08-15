@@ -24,36 +24,57 @@ h1,h2 { text-align:center; margin-bottom:0; }
 .security-item {
   display:flex;
   align-items:center;
-  justify-content:space-between;
+  justify-content: space-between;
   background: rgba(0,0,0,0.2);
-  padding:8px 12px;
+  padding:10px 12px; /* biraz daha yüksek */
   border-radius:10px;
   margin-bottom:6px;
   font-size:15px;
   transition:0.3s;
 }
 .security-item:hover { background: rgba(0,0,0,0.35); }
-.security-light { width:10px; height:10px; background:#2ecc71; border-radius:50%; margin-right:10px; flex-shrink:0; }
-.security-name { font-weight:600; margin-right:10px; }
-.call-btn { background:#27ae60; color:#fff; border:none; padding:6px 10px; border-radius:8px; cursor:pointer; }
+
+.security-light {
+  width:14px;  /* okutucu biraz daha büyük */
+  height:14px;
+  border-radius:50%;
+  margin-right:10px;
+  flex-shrink:0;
+}
+
+.security-name {
+  font-weight:600;
+  margin-right:10px;
+  flex:1; /* isim burada tam sığacak */
+}
+
+.call-btn {
+  background:#27ae60;
+  color:#fff;
+  border:none;
+  padding:4px 8px;    /* küçük ve ince */
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;     /* font küçültüldü */
+}
 .call-btn:hover { background:#2ecc71; }
+
+/* Mobil uyumlu ayarlar */
+@media (max-width:600px){
+  .security-item {
+    flex-direction: row; /* yatay bırakıyoruz */
+    align-items: center;
+    gap:6px;
+  }
+  .call-btn {
+    align-self: auto;
+  }
+}
 
 @media (min-width:600px){
   .devriye-item { flex-direction: row; justify-content: space-between; align-items: center; }
   .devriye-left { margin-right:20px; }
   .devriye-status { margin-top:0; }
-}
-
-/* Mobil uyumlu ayarlar */
-@media (max-width:600px){
-  .security-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap:6px;
-  }
-  .call-btn {
-    align-self: flex-start;
-  }
 }
 
 input[type=date] { padding:6px; border-radius:8px; border:none; outline:none; margin-top:5px; }
@@ -126,7 +147,7 @@ onValue(ref(db,'nobetDurumu'), snapshot=>{
               <div class="security-name">Güvenlik ${userName} Nöbette</div>
             </div>
             <button class="call-btn" onclick="window.location.href='tel:${phone}'">
-              📞 Güvenliği Ara
+              📞 Ara
             </button>
           `;
           securityStatus.appendChild(div);
@@ -180,7 +201,6 @@ function renderDevriyeHistory(){
       pointsHTML = `<div class="devriye-points"><strong>Eksik Noktalar:</strong> ${isaretlenmeyen.join(', ')}</div>`;
     }
 
-    // Label-değerleri flex ile yan yana, gap ile küçük boşluk
     left.innerHTML = `
       <div style="display:flex; gap:6px;"><strong>Güvenlik:</strong> ${d.userName}</div>
       <div style="display:flex; gap:6px;"><strong>Tarih:</strong> ${d.displayDate}</div>
