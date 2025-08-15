@@ -48,9 +48,9 @@ h1,h2 { text-align:center; margin-bottom:0; }
 /* Mobil uyumlu ayarlar */
 @media (max-width:600px){
   .security-item {
-    flex-direction: row; /* Satır olarak kalacak */
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between; /* Buton sağda */
+    justify-content: space-between;
   }
   .call-btn { align-self: auto; }
 }
@@ -100,8 +100,30 @@ const devriyeHistoryEl = document.getElementById("devriyeHistory");
 const filterDate = document.getElementById("filterDate");
 
 let allDevriyeHistory = [];
-const today = new Date().toISOString().split('T')[0];
-filterDate.value = today;
+
+// Türkiye saatine göre bugünün tarihi
+function getTurkeyToday(){
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset()*60000);
+  const turkeyOffset = 3*60*60*1000;
+  const turkeyTime = new Date(utc + turkeyOffset);
+  const year = turkeyTime.getFullYear();
+  const month = String(turkeyTime.getMonth()+1).padStart(2,'0');
+  const day = String(turkeyTime.getDate()).padStart(2,'0');
+  return `${year}-${month}-${day}`;
+}
+
+// Filtreyi bugünün tarihine ayarla
+filterDate.value = getTurkeyToday();
+
+// Sayfa açıkken gece yarısı otomatik tarih güncelleme
+setInterval(()=>{
+  const today = getTurkeyToday();
+  if(filterDate.value !== today){
+    filterDate.value = today;
+    renderDevriyeHistory();
+  }
+}, 60*1000); // Her dakika kontrol
 
 // Aktif güvenlikler ve “Güvenliği Ara” butonu
 onValue(ref(db,'nobetDurumu'), snapshot=>{
@@ -114,13 +136,8 @@ onValue(ref(db,'nobetDurumu'), snapshot=>{
         const userName = val[key].user;
         const userRef = ref(db,'users/' + userName);
 
-        // Kullanıcının var olup olmadığını kontrol ediyoruz
         onValue(userRef, userSnap=>{
-          if(!userSnap.exists()){
-            // Kullanıcı silinmiş, güvenlik kutusunu gösterme
-            return;
-          }
-
+          if(!userSnap.exists()) return;
           const userData = userSnap.val();
           const phone = userData?.phone || '';
           
@@ -161,16 +178,30 @@ onValue(ref(db,'devriyeHistory'), snapshot=>{
         });
       }
     }
+    // Timestamp sırasına göre ters sırala
     allDevriyeHistory.sort((a,b)=>b.timestamp - a.timestamp);
   }
   renderDevriyeHistory();
 });
 
+// Devriye tarihlerini Türkiye saatine göre filtreleme
 function renderDevriyeHistory(){
   const selectedDate = filterDate.value;
   devriyeHistoryEl.innerHTML = '';
-  const filtered = selectedDate ? allDevriyeHistory.filter(d=>d.date===selectedDate) : allDevriyeHistory;
-  
+
+  const filtered = allDevriyeHistory.filter(d=>{
+    const ts = d.timestamp;
+    const dateObj = new Date(ts);
+    const utc = dateObj.getTime() + (dateObj.getTimezoneOffset()*60000);
+    const turkeyOffset = 3*60*60*1000;
+    const turkeyTime = new Date(utc + turkeyOffset);
+    const year = turkeyTime.getFullYear();
+    const month = String(turkeyTime.getMonth()+1).padStart(2,'0');
+    const day = String(turkeyTime.getDate()).padStart(2,'0');
+    const devriyeDateStr = `${year}-${month}-${day}`;
+    return selectedDate ? devriyeDateStr === selectedDate : true;
+  });
+
   filtered.forEach(d=>{
     const div = document.createElement('div');
     div.classList.add('devriye-item');
@@ -178,7 +209,6 @@ function renderDevriyeHistory(){
     const left = document.createElement('div');
     left.classList.add('devriye-left');
 
-    // Sadece işaretlenmeyen noktaları göster
     let pointsHTML = '';
     if(d.status.toLowerCase().includes('eksik')){
       const tumNoktalar = ["Bahçe","Otopark","Arka Bahçe","Giriş Kapısı","Yan Bahçe"];
@@ -186,7 +216,6 @@ function renderDevriyeHistory(){
       pointsHTML = `<div class="devriye-points"><strong>Eksik Noktalar:</strong> ${isaretlenmeyen.join(', ')}</div>`;
     }
 
-    // Label-değerleri flex ile yan yana, gap ile küçük boşluk
     left.innerHTML = `
       <div style="display:flex; gap:6px;"><strong>Güvenlik:</strong> ${d.userName}</div>
       <div style="display:flex; gap:6px;"><strong>Tarih:</strong> ${d.displayDate}</div>
