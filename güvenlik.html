@@ -32,7 +32,7 @@ input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; 
 }
 
 #historyPanel {
-  position:fixed; top:0; right:-100%; /* tamamen ekrandan dışarı */
+  position:fixed; top:0; right:-100%;
   width:320px; height:100%;
   background: rgba(44,62,80,0.95);
   color:#fff;
@@ -45,12 +45,22 @@ input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; 
 
 #historyPanel h2 { text-align:center; margin-top:0; }
 
+.profileIcon {
+  position:fixed; top:20px; left:20px; background:#16a085; color:#fff;
+  border:none; border-radius:50%; width:50px; height:50px;
+  font-size:24px; z-index:1001; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+
 @media (min-width:600px){
   .container { max-width:600px; margin:auto; }
 }
 </style>
 </head>
 <body>
+
+<!-- Profil ikonu -->
+<button class="profileIcon" id="profileBtn">&#128100;</button>
 
 <!-- Tek ikon: Devriye Geçmişi -->
 <button id="historyToggleBtn">&#128221;</button> <!-- Liste ikonu (📑) -->
@@ -60,6 +70,29 @@ input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; 
   <label for="filterDate">Tarih Filtrele:</label>
   <input type="date" id="filterDate">
   <div id="devriyeHistory"></div>
+</div>
+
+<!-- Profil Modal -->
+<div id="profileModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: rgba(30,30,30,0.95); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.5); z-index:9999; width:90%; max-width:400px;">
+  <span id="profileClose" style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:18px; color:#fff;">✖</span>
+  <h3 style="text-align:center;">Profil</h3>
+  
+  <label>Kullanıcı Adı (değiştirilemez)</label>
+  <input type="text" id="profileUsername" disabled style="width:100%; padding:8px; border-radius:8px; border:none; background:#333; color:#fff; font-weight:600;">
+  
+  <label>Eski Şifre</label>
+  <input type="password" id="oldPassword" style="width:100%; padding:8px; border-radius:8px; border:none;">
+  
+  <label>Yeni Şifre</label>
+  <input type="password" id="newPassword" style="width:100%; padding:8px; border-radius:8px; border:none;">
+  
+  <label>Telefon Numarası</label>
+  <input type="text" id="phoneNumber" placeholder="+90..." style="width:100%; padding:8px; border-radius:8px; border:none;">
+  
+  <button id="updateProfileBtn" style="width:100%; padding:10px; margin-top:12px; border:none; border-radius:8px; background:#27ae60; color:#fff; font-weight:600;">Güncelle</button>
+  <button id="logoutBtn" style="width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; background:#c0392b; color:#fff; font-weight:600;">Çıkış</button>
+
+  <div id="profileMessage" style="margin-top:10px; font-size:14px;"></div>
 </div>
 
 <div class="container" id="mainContainer">
@@ -92,7 +125,7 @@ input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; 
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import { getDatabase, ref, onValue, push, set, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBX0PUaisTG-TvIOCCtKzSiI3e7yhLu3ik",
@@ -112,6 +145,54 @@ if(!currentUser || currentUser.type!=='security'){
   window.location.href="login.html";
 }
 
+// Profil modal ve ikonları
+const profileBtn = document.getElementById("profileBtn");
+const profileModal = document.getElementById("profileModal");
+const profileClose = document.getElementById("profileClose");
+const profileUsername = document.getElementById("profileUsername");
+const oldPassword = document.getElementById("oldPassword");
+const newPassword = document.getElementById("newPassword");
+const phoneNumber = document.getElementById("phoneNumber");
+const updateProfileBtn = document.getElementById("updateProfileBtn");
+const profileMessage = document.getElementById("profileMessage");
+const logoutBtn = document.getElementById("logoutBtn");
+
+profileUsername.value = currentUser.name;
+
+profileBtn.addEventListener('click', ()=>{ profileModal.style.display='block'; });
+profileClose.addEventListener('click', ()=>{ profileModal.style.display='none'; });
+
+// Profil güncelleme
+updateProfileBtn.addEventListener('click', async ()=>{
+  profileMessage.innerText='';
+  if(!oldPassword.value && !newPassword.value && !phoneNumber.value) return;
+
+  const userRef = ref(db, 'users/'+currentUser.username);
+  onValue(userRef, async snapshot=>{
+    const user = snapshot.val();
+    if(!user) return profileMessage.innerText="Kullanıcı bulunamadı.";
+    if(oldPassword.value && oldPassword.value !== user.password) return profileMessage.innerText="Eski şifre hatalı!";
+    
+    const updates = {};
+    if(newPassword.value) updates.password = newPassword.value;
+    if(phoneNumber.value) updates.phone = phoneNumber.value;
+
+    await update(userRef, updates);
+    profileMessage.innerText="Profil başarıyla güncellendi!";
+    oldPassword.value=''; newPassword.value=''; phoneNumber.value='';
+    if(updates.password) currentUser.password = updates.password;
+    if(updates.phone) currentUser.phone = updates.phone;
+    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+  }, {onlyOnce:true});
+});
+
+// Çıkış butonu
+logoutBtn.addEventListener('click', ()=>{
+  sessionStorage.removeItem('currentUser');
+  window.location.href = "index.html";
+});
+
+// Diğer güvenlik panel kodları
 const nobetAlBtn = document.getElementById("nobetAlBtn");
 const nobetBitirBtn = document.getElementById("nobetBitirBtn");
 const nobetStatus = document.getElementById("nobetStatus");
@@ -128,38 +209,27 @@ const mainContainer = document.getElementById("mainContainer");
 let devriyeStarted=false, devriyeStartTime=null, readPoints=[], allDevriyeHistory=[];
 let historyOpen=false;
 
-// Nöbet durumu referansı
+// Nöbet durumu
 const nobetRef = ref(db,'nobetDurumu/'+currentUser.username);
-
-// Nöbet durumunu anlık dinle ve butonları güncelle
 onValue(nobetRef, snapshot=>{
   const val = snapshot.val();
   if(val){
     if(val.status === 'started'){
       nobetStatus.innerText = `${val.user} şu anda nöbette.`;
-      nobetAlBtn.disabled = true;
-      nobetBitirBtn.disabled = false;
+      nobetAlBtn.disabled = true; nobetBitirBtn.disabled = false;
     } else if(val.status === 'ended'){
       nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
-      nobetAlBtn.disabled = false;
-      nobetBitirBtn.disabled = true;
+      nobetAlBtn.disabled = false; nobetBitirBtn.disabled = true;
     }
   } else {
     nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
-    nobetAlBtn.disabled = false;
-    nobetBitirBtn.disabled = true;
+    nobetAlBtn.disabled = false; nobetBitirBtn.disabled = true;
   }
 });
 
-// Nöbet al
-nobetAlBtn.addEventListener('click', ()=>{
-  set(nobetRef, { user: currentUser.name, status:'started' });
-});
-
-// Nöbet bitir
-nobetBitirBtn.addEventListener('click', ()=>{
-  set(nobetRef, { user: currentUser.name, status:'ended' });
-});
+// Nöbet al/bitir
+nobetAlBtn.addEventListener('click', ()=>{ set(nobetRef, { user: currentUser.name, status:'started' }); });
+nobetBitirBtn.addEventListener('click', ()=>{ set(nobetRef, { user: currentUser.name, status:'ended' }); });
 
 // Devriye başlat
 devriyeStartBtn.addEventListener('click', ()=>{
@@ -242,14 +312,13 @@ filterDate.addEventListener('change', renderDevriyeHistory);
 
 // Tek ikon ile aç/kapa
 historyToggleBtn.addEventListener('click', ()=>{
-  if(!historyOpen){
-    historyPanel.style.right='0';
-    mainContainer.style.transform='translateX(-270px)';
-  } else {
+  if(historyPanel.style.right==='0px'){
     historyPanel.style.right='-100%';
     mainContainer.style.transform='translateX(0)';
+  } else {
+    historyPanel.style.right='0';
+    mainContainer.style.transform='translateX(-270px)';
   }
-  historyOpen=!historyOpen;
 });
 </script>
 </body>
