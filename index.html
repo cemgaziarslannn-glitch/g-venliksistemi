@@ -263,7 +263,7 @@ async function loginUser(username, password, role){
     if(role === "security"){
       if(secRemember.checked) localStorage.setItem("securityUser", JSON.stringify({username,password}));
       else localStorage.removeItem("securityUser");
-      if(user.type==="security") window.location.href="güvenlik.html";
+      if(user.type==="security") window.location.href="guvenlik.html";
       else msg.textContent="Yetki hatalı!";
     }
     else if(role==="resident"){
@@ -287,3 +287,4 @@ adminLoginBtn.addEventListener("click", ()=>{ loginUser(adminUsername.value, adm
 
 </body>
 </html>
+
