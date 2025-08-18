@@ -3,146 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CGA Güvenlik Sistemi - Güvenlik Paneli</title>
+<title>CGA Güvenlik Sistemleri - Giriş Paneli</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body { margin:0; font-family:'Montserrat', sans-serif; background: linear-gradient(135deg, #2c3e50, #34495e); color:#ecf0f1; overflow-x:hidden; }
-  .container { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:20px; transition: transform 0.3s ease; }
-  header { text-align:center; margin-bottom:20px; }
-  button { padding:12px 18px; margin:6px; border-radius:10px; border:none; cursor:pointer; font-weight:600; transition:0.3s; }
-  button:hover { opacity:0.9; }
-  #nobetAlBtn { background-color: #2980b9; color:#fff; }
-  #nobetBitirBtn { background-color: #c0392b; color:#fff; }
-  #devriyeStartBtn { background-color: #2980b9; color:#fff; }
-  #devriyeEndBtn { background-color: #c0392b; color:#fff; }
-  .status { margin:12px 0; padding:12px; background: rgba(0,0,0,0.2); border-radius:10px; width:100%; text-align:center; font-size:16px; }
-  .panel { background: rgba(255,255,255,0.05); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.4); width:100%; margin-top:20px; }
-  .panel h2 { margin-top:0; text-align:center; }
-  .qr-list div { margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
-  .qr-list button.qrBtn { background-color: #7f8c8d; color:#fff; flex-shrink:0; width:120px; }
-  .qr-list button.qrBtn.read { background-color:#27ae60; }
-  input[type=date] { padding:6px; border-radius:8px; border:none; font-size:14px; }
-
-  /* Tek ikonlu sağ panel */
-  #historyToggleBtn {
-    position:fixed; top:20px; right:20px; background:#f39c12; color:#fff;
-    border:none; border-radius:50%; width:50px; height:50px;
-    font-size:24px; z-index:1001; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  body {
+    margin:0;
+    font-family:'Montserrat',sans-serif;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg,#0b1a27,#1a2b3f);
   }
-  #historyPanel {
-    position:fixed; top:0; right:-100%;
-    width:320px; height:100%;
-    background: rgba(44,62,80,0.95);
-    color:#fff;
-    box-shadow: -6px 0 20px rgba(0,0,0,0.4);
-    padding:20px;
-    transition: right 0.3s ease;
-    overflow-y:auto;
-    z-index:1000;
+  .container {
+    width: 380px;
+    padding: 50px 30px;
+    border-radius: 25px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    text-align: center;
+    transition: all 0.3s ease;
   }
-  #historyPanel h2 { text-align:center; margin-top:0; }
-
-  .profileIcon {
-    position:fixed; top:20px; left:20px; background:#16a085; color:#fff;
-    border:none; border-radius:50%; width:50px; height:50px;
-    font-size:24px; z-index:1001; cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #f1c40f;
+    text-shadow: 0 0 10px rgba(241,196,15,0.7);
+    margin-bottom: 10px;
+    cursor: pointer;
   }
-
-  @media (min-width:600px){
-    .container { max-width:600px; margin:auto; }
+  h2 { font-size: 18px; color: #ecf0f1; margin-bottom: 30px; }
+  .role-buttons {
+    display:flex;
+    justify-content: space-between;
+    margin-bottom:25px;
   }
-
-  /* === QR KAMERA MODALI (Tam Ekran) === */
-  #qrScannerModal {
-    display:none; position:fixed; inset:0; background:#000; z-index:9999;
- flex-direction:column; align-items:center; justify-content:center;
-    padding:16px;
+  .role-buttons button {
+    width:48%;
+    padding:12px;
+    border:none;
+    border-radius:15px;
+    cursor:pointer;
+    font-weight:600;
+    color:white;
+    background: linear-gradient(90deg,#34495e,#2c3e50);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transition: 0.3s;
   }
-  #qr-reader { width:100%; max-width:520px; }
-  #closeScanner {
-    margin-top:20px; padding:12px 18px; border:none; border-radius:10px;
-    background:#c0392b; color:#fff; font-weight:700; cursor:pointer;
+  .role-buttons button.active { background: linear-gradient(90deg,#27ae60,#2ecc71); box-shadow:0 6px 20px rgba(39,174,96,0.5);}
+  .input-group { display:none; flex-direction:column; text-align:left; animation:fadeIn 0.4s; }
+  .input-group.active { display:flex; }
+  input[type="text"], input[type="password"] {
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:12px;
+    border:none;
+    background: rgba(255,255,255,0.1);
+    color:white;
+    font-size: 14px;
   }
+  input::placeholder { color: rgba(236,240,241,0.6); }
+  .remember {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size: 14px;
+    margin-top:8px;
+  }
+  .remember input[type="checkbox"] { margin:0; cursor:pointer; }
+  .remember label { margin:0; cursor:pointer; color: #ffffff; }
+  .loginBtn {
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:15px;
+    background: linear-gradient(90deg,#27ae60,#2ecc71);
+    color:white;
+    font-weight:600;
+    font-size:16px;
+    cursor:pointer;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    transition:0.3s;
+  }
+  .loginBtn:hover { background: linear-gradient(90deg,#2ecc71,#27ae60); transform:translateY(-2px); }
+  .message { margin-top:15px; color:#e74c3c; font-weight:600; text-align:center; min-height:20px; }
+  .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); align-items:center; justify-content:center; }
+  .modal-content { background:#2c3e50; padding:25px; border-radius:20px; width:320px; text-align:center; }
+  @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
 </style>
 </head>
 <body>
 
-<!-- Profil ikonu -->
-<button class="profileIcon" id="profileBtn">&#128100;</button>
+<div class="container">
+  <h1 id="cgaTitle">CGA Güvenlik Sistemleri</h1>
+  <h2>Giriş Paneli</h2>
 
-<!-- Tek ikon: Devriye Geçmişi -->
-<button id="historyToggleBtn">&#128221;</button> <!-- Liste ikonu (📑) -->
+  <div class="role-buttons">
+    <button id="securityBtn">Güvenlik Girişi</button>
+    <button id="residentBtn" class="active">Site Sakini Girişi</button>
+  </div>
 
-<div id="historyPanel">
-  <h2>Devriye Geçmişi</h2>
-  <label for="filterDate">Tarih Filtrele:</label>
-  <input type="date" id="filterDate">
-  <div id="devriyeHistory"></div>
-</div>
-
-<!-- Profil Modal -->
-<div id="profileModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: rgba(30,30,30,0.95); padding:20px; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,0.5); z-index:9999; width:90%; max-width:400px;">
-  <span id="profileClose" style="position:absolute; top:10px; right:10px; cursor:pointer; font-size:18px; color:#fff;">✖</span>
-  <h3 style="text-align:center;">Profil</h3>
-  
-  <label>Kullanıcı Adı (değiştirilemez)</label>
-  <input type="text" id="profileUsername" disabled style="width:100%; padding:8px; border-radius:8px; border:none; background:#333; color:#fff; font-weight:600;">
-  
-  <label>Eski Şifre</label>
-  <input type="password" id="oldPassword" style="width:100%; padding:8px; border-radius:8px; border:none;">
-  
-  <label>Yeni Şifre</label>
-  <input type="password" id="newPassword" style="width:100%; padding:8px; border-radius:8px; border:none;">
-  
-  <label>Telefon Numarası</label>
-  <input type="text" id="phoneNumber" placeholder="+90..." style="width:100%; padding:8px; border-radius:8px; border:none;">
-  
-  <button id="updateProfileBtn" style="width:100%; padding:10px; margin-top:12px; border:none; border-radius:8px; background:#27ae60; color:#fff; font-weight:600;">Güncelle</button>
-  <button id="logoutBtn" style="width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; background:#c0392b; color:#fff; font-weight:600;">Çıkış</button>
-
-  <div id="profileMessage" style="margin-top:10px; font-size:14px;"></div>
-</div>
-
-<div class="container" id="mainContainer">
-  <header>
-    <h1>CGA Güvenlik Sistemi - Güvenlik Paneli</h1>
-  </header>
-
-  <!-- Nöbet -->
-  <button id="nobetAlBtn">Nöbeti Teslim Al</button>
-  <button id="nobetBitirBtn" disabled>Nöbeti Teslim Ettim</button>
-  <div class="status" id="nobetStatus">Henüz nöbette değilsiniz.</div>
-
-  <!-- Devriye -->
-  <div class="panel">
-    <h2>Devriye</h2>
-    <button id="devriyeStartBtn">Devriye Başlat</button>
-    <button id="devriyeEndBtn" disabled>Devriyeyi Bitir</button>
-    <div class="status" id="devriyeStatus">Devriye başlamadı.</div>
-
-    <h3>Devriye Noktaları</h3>
-    <div class="qr-list" id="qrListContainer">
-      <!-- Firebase'den gelecek devriye noktaları buraya eklenecek -->
+  <div id="securityGroup" class="input-group">
+    <input type="text" id="secUsername" placeholder="Kullanıcı Adı">
+    <input type="password" id="secPassword" placeholder="Şifre">
+    <div class="remember">
+      <input type="checkbox" id="secRemember">
+      <label for="secRemember">Kullanıcıyı hatırla</label>
     </div>
+    <button class="loginBtn" id="secLoginBtn">Giriş Yap</button>
+  </div>
+
+  <div id="residentGroup" class="input-group active">
+    <input type="text" id="resUsername" placeholder="Kullanıcı Adı">
+    <input type="password" id="resPassword" placeholder="Şifre">
+    <div class="remember">
+      <input type="checkbox" id="resRemember">
+      <label for="resRemember">Kullanıcıyı hatırla</label>
+    </div>
+    <button class="loginBtn" id="resLoginBtn">Giriş Yap</button>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-content">
+    <h3>Yönetici Girişi</h3>
+    <input type="text" id="adminUsername" placeholder="Kullanıcı Adı">
+    <input type="password" id="adminPassword" placeholder="Şifre">
+    <button id="adminLoginBtn" class="loginBtn">Giriş Yap</button>
+    <button id="closeAdminBtn" style="background:#c0392b; margin-top:10px;">Kapat</button>
   </div>
 </div>
 
-<!-- === QR Kamerası Modalı === -->
-<div id="qrScannerModal">
-  <div id="qr-reader"></div>
-  <button id="closeScanner">Kapat</button>
-</div>
-
-<!-- Html5Qrcode (kameralı QR okuma) -->
-<script src="https://unpkg.com/html5-qrcode"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
-/* === Firebase === */
 const firebaseConfig = {
   apiKey: "AIzaSyBX0PUaisTG-TvIOCCtKzSiI3e7yhLu3ik",
   authDomain: "guzelailemchat.firebaseapp.com",
@@ -155,244 +155,135 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* === Session kontrol === */
-const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-if(!currentUser || currentUser.type!=='security'){
-  alert("Güvenlik kullanıcı ile giriş yapmalısınız!");
-  window.location.href="login.html";
-}
+const securityBtn = document.getElementById("securityBtn");
+const residentBtn = document.getElementById("residentBtn");
+const securityGroup = document.getElementById("securityGroup");
+const residentGroup = document.getElementById("residentGroup");
+const cgaTitle = document.getElementById("cgaTitle");
+const msg = document.getElementById("message");
+const adminModal = document.getElementById("adminModal");
 
-/* === Profil modal ve işlemleri === */
-const profileBtn = document.getElementById("profileBtn");
-const profileModal = document.getElementById("profileModal");
-const profileClose = document.getElementById("profileClose");
-const profileUsername = document.getElementById("profileUsername");
-const oldPassword = document.getElementById("oldPassword");
-const newPassword = document.getElementById("newPassword");
-const phoneNumber = document.getElementById("phoneNumber");
-const updateProfileBtn = document.getElementById("updateProfileBtn");
-const profileMessage = document.getElementById("profileMessage");
-const logoutBtn = document.getElementById("logoutBtn");
+const secUsername = document.getElementById("secUsername");
+const secPassword = document.getElementById("secPassword");
+const secRemember = document.getElementById("secRemember");
 
-profileUsername.value = currentUser.name || currentUser.username || "";
+const resUsername = document.getElementById("resUsername");
+const resPassword = document.getElementById("resPassword");
+const resRemember = document.getElementById("resRemember");
 
-profileBtn.addEventListener('click', ()=>{ profileModal.style.display='block'; });
-profileClose.addEventListener('click', ()=>{ profileModal.style.display='none'; });
+const adminUsername = document.getElementById("adminUsername");
+const adminPassword = document.getElementById("adminPassword");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const closeAdminBtn = document.getElementById("closeAdminBtn");
 
-updateProfileBtn.addEventListener('click', async ()=>{
-  profileMessage.innerText='';
-  if(!oldPassword.value && !newPassword.value && !phoneNumber.value) return;
+// Sekme geçişleri
+securityBtn.addEventListener("click", ()=>{
+  securityBtn.classList.add("active");
+  residentBtn.classList.remove("active");
+  securityGroup.classList.add("active");
+  residentGroup.classList.remove("active");
+  msg.textContent="";
+});
+residentBtn.addEventListener("click", ()=>{
+  residentBtn.classList.add("active");
+  securityBtn.classList.remove("active");
+  residentGroup.classList.add("active");
+  securityGroup.classList.remove("active");
+  msg.textContent="";
+});
 
-  const key = currentUser.username;
-  const userRef = ref(db, 'users/'+key);
-
-  const snapshot = await get(userRef);
-  const user = snapshot.val();
-  if(!user){ profileMessage.innerText="Kullanıcı bulunamadı."; return; }
-
-  if(oldPassword.value && oldPassword.value !== user.password){
-    profileMessage.innerText="Eski şifre hatalı!"; return;
+// 10 tık ile admin modal aç
+let cgaClickCount=0;
+cgaTitle.addEventListener("click", ()=>{
+  cgaClickCount++;
+  if(cgaClickCount>=10){
+    adminModal.style.display="flex";
+    cgaClickCount=0;
   }
-
-  const updates = {};
-  if(newPassword.value) updates.password = newPassword.value;
-  if(phoneNumber.value) updates.phone = phoneNumber.value;
-
-  await update(userRef, updates);
-  profileMessage.innerText="Profil başarıyla güncellendi!";
-  oldPassword.value=''; newPassword.value=''; phoneNumber.value='';
-  if(updates.password) currentUser.password = updates.password;
-  if(updates.phone) currentUser.phone = updates.phone;
-  sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 });
+closeAdminBtn.addEventListener("click", ()=>adminModal.style.display="none");
 
-logoutBtn.addEventListener('click', ()=>{
-  sessionStorage.removeItem('currentUser');
-  window.location.href = "index.html";
-});
+// Sayfa yüklenince hatırlanan kullanıcıları doldur
+window.addEventListener("load", ()=>{
+  // Başlangıçta Site Sakini sekmesini aktif yap
+  residentBtn.click();
 
-/* === Panel elemanları === */
-const nobetAlBtn = document.getElementById("nobetAlBtn");
-const nobetBitirBtn = document.getElementById("nobetBitirBtn");
-const nobetStatus = document.getElementById("nobetStatus");
-const devriyeStartBtn = document.getElementById("devriyeStartBtn");
-const devriyeEndBtn = document.getElementById("devriyeEndBtn");
-const devriyeStatus = document.getElementById("devriyeStatus");
-const devriyeHistoryEl = document.getElementById("devriyeHistory");
-const filterDate = document.getElementById("filterDate");
-const historyToggleBtn = document.getElementById("historyToggleBtn");
-const historyPanel = document.getElementById("historyPanel");
-const mainContainer = document.getElementById("mainContainer");
-const qrListContainer = document.getElementById('qrListContainer');
-
-/* === QR Modal === */
-const qrModal = document.getElementById('qrScannerModal');
-const qrReaderDivId = 'qr-reader';
-const closeScanner = document.getElementById('closeScanner');
-let qrScanner = null;
-
-let devriyeStarted=false, devriyeStartTime=null, readPoints=[], allDevriyeHistory=[];
-
-/* === Nöbet durumu === */
-const nobetRef = ref(db,'nobetDurumu/'+(currentUser.username || currentUser.name));
-onValue(nobetRef, snapshot=>{
-  const val = snapshot.val();
-  if(val){
-    if(val.status === 'started'){
-      nobetStatus.innerText = `${val.user} şu anda nöbette.`;
-      nobetAlBtn.disabled = true; nobetBitirBtn.disabled = false;
-    } else {
-      nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
-      nobetAlBtn.disabled = false; nobetBitirBtn.disabled = true;
-    }
-  } else {
-    nobetStatus.innerText = 'Henüz nöbette değilsiniz.';
-    nobetAlBtn.disabled = false; nobetBitirBtn.disabled = true;
+  const secStored = JSON.parse(localStorage.getItem("securityUser"));
+  if(secStored){
+    secUsername.value = secStored.username;
+    secPassword.value = secStored.password;
+    secRemember.checked = true;
+  }
+  const resStored = JSON.parse(localStorage.getItem("residentUser"));
+  if(resStored){
+    resUsername.value = resStored.username;
+    resPassword.value = resStored.password;
+    resRemember.checked = true;
   }
 });
 
-nobetAlBtn.addEventListener('click', ()=>{ set(nobetRef, { user: currentUser.name || currentUser.username, status:'started' }); });
-nobetBitirBtn.addEventListener('click', ()=>{ set(nobetRef, { user: currentUser.name || currentUser.username, status:'ended' }); });
+// Login fonksiyonu
+async function loginUser(username, password, role){
+  username = username.trim();
+  password = password.trim();
+  msg.textContent="";
 
-/* === Devriye akışı === */
-devriyeStartBtn.addEventListener('click', ()=>{
-  if(devriyeStarted) return;
-  devriyeStarted=true;
-  devriyeStartTime=new Date();
-  devriyeStatus.innerText='Devriye başladı: '+devriyeStartTime.toLocaleTimeString();
-  devriyeEndBtn.disabled=false;
-  readPoints=[];
-  document.querySelectorAll('.qrBtn').forEach(btn=>{ btn.classList.remove('read'); btn.nextElementSibling.innerText=btn.dataset.point; });
-});
-
-devriyeEndBtn.addEventListener('click', ()=>{
-  if(!devriyeStarted) return;
-  const devriyeEndTime=new Date();
-  let statusText = readPoints.length===document.querySelectorAll('.qrBtn').length ? "Tam devriye":"Eksik devriye";
-  const weekday = devriyeStartTime.toLocaleDateString('tr-TR',{ weekday:'long' });
-  const dateText = `${devriyeStartTime.toLocaleDateString()} (${weekday.charAt(0).toUpperCase()+weekday.slice(1)})`;
-
-  const devriyeRecord = {
-    user: currentUser.username || currentUser.name,
-    name: currentUser.name || currentUser.username,
-    date: devriyeStartTime.toISOString().split('T')[0],
-    displayDate: dateText,
-    start: devriyeStartTime.toLocaleTimeString(),
-    end: devriyeEndTime.toLocaleTimeString(),
-    status: statusText,
-    points:[...readPoints],
-    timestamp: Date.now()
-  };
-
-  push(ref(db,'devriyeHistory/'+(currentUser.username || currentUser.name)), devriyeRecord);
-  devriyeStarted=false;
-  devriyeEndBtn.disabled=true;
-  devriyeStatus.innerText='Devriye tamamlandı.';
-  document.querySelectorAll('.qrBtn').forEach(btn=>{ btn.classList.remove('read'); btn.nextElementSibling.innerText=btn.dataset.point; });
-});
-
-/* === Devriye geçmişini dinle === */
-onValue(ref(db,'devriyeHistory/'+(currentUser.username || currentUser.name)), snapshot=>{
-  const val = snapshot.val();
-  allDevriyeHistory = val ? Object.values(val).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0)) : [];
-  renderDevriyeHistory();
-});
-
-function renderDevriyeHistory(){
-  const selectedDate = filterDate.value;
-  devriyeHistoryEl.innerHTML='';
-  const filtered = selectedDate ? allDevriyeHistory.filter(d=>d.date===selectedDate):allDevriyeHistory;
-  filtered.forEach(d=>{
-    const item=document.createElement('div');
-    item.classList.add('devriye-item');
-    item.style.marginBottom='10px';
-    item.style.padding='10px';
-    item.style.background='rgba(44,62,80,0.6)';
-    item.style.borderRadius='10px';
-    item.style.fontSize='14px';
-    item.innerHTML=`<strong>Tarih:</strong> ${d.displayDate}<br>
-                    <strong>Başlangıç:</strong> ${d.start}<br>
-                    <strong>Bitiş:</strong> ${d.end}<br>
-                    <strong>Durum:</strong> ${d.status}<br>
-                    <strong>Noktalar:</strong> ${Array.isArray(d.points)?d.points.join(', '):''}`;
-    devriyeHistoryEl.appendChild(item);
-  });
-}
-filterDate.addEventListener('change', renderDevriyeHistory);
-
-/* === Sağ panel aç/kapa === */
-historyToggleBtn.addEventListener('click', ()=>{
-  if(historyPanel.style.right==='0px'){
-    historyPanel.style.right='-100%';
-    mainContainer.style.transform='translateX(0)';
-  } else {
-    historyPanel.style.right='0';
-    mainContainer.style.transform='translateX(-320px)';
+  if(!username || !password){
+    msg.textContent="Kullanıcı adı ve şifre gerekli!";
+    return;
   }
-});
 
-/* === QR SCANNER === */
-function hasCameraLib(){ return typeof Html5Qrcode !== 'undefined'; }
-
-async function startScanner(pointName, btnEl){
-  if(!devriyeStarted){ alert("Önce devriyeyi başlatın!"); return; }
-  if(!hasCameraLib()){ alert("QR kütüphanesi yüklenemedi!"); return; }
-  qrModal.style.display='flex';
-
-  if(qrScanner) qrScanner.clear();
-  qrScanner = new Html5Qrcode(qrReaderDivId);
-
-  qrScanner.start(
-    { facingMode:"environment" },
-    { fps:10, qrbox:250 },
-    qrCodeMessage => {
-      const qrId = qrCodeMessage.trim();
-      if(qrId === btnEl.dataset.qrid){
-        btnEl.classList.add('read');
-        btnEl.nextElementSibling.innerText='Tamamlandı';
-        if(!readPoints.includes(pointName)) readPoints.push(pointName);
-        qrScanner.stop();
-        qrModal.style.display='none';
-      } else {
-        alert("QR kod eşleşmedi!");
+  try {
+    // Admin login
+    const adminSnap = await get(child(ref(db), 'admin'));
+    if(adminSnap.exists()){
+      const adminUser = adminSnap.val();
+      if(username === adminUser.username && password === adminUser.password){
+        sessionStorage.setItem("currentUser", JSON.stringify({username, type:"admin"}));
+        window.location.href = "mod.html";
+        return;
       }
-    },
-    err=>{ /* console.log(err) */ }
-  ).catch(err=>{ alert("Kamera açılamadı: "+err); });
+    }
+
+    // Normal kullanıcı login
+    const userSnap = await get(child(ref(db), 'users/' + username));
+    if(!userSnap.exists()){
+      msg.textContent="Kullanıcı bulunamadı!";
+      return;
+    }
+    const user = userSnap.val();
+    if(user.password !== password){
+      msg.textContent="Şifre hatalı!";
+      return;
+    }
+
+    sessionStorage.setItem("currentUser", JSON.stringify({username:user.username,type:user.type}));
+
+    // Hatırla checkbox
+    if(role === "security"){
+      if(secRemember.checked) localStorage.setItem("securityUser", JSON.stringify({username,password}));
+      else localStorage.removeItem("securityUser");
+      if(user.type==="security") window.location.href="guvenlik.html";
+      else msg.textContent="Yetki hatalı!";
+    }
+    else if(role==="resident"){
+      if(resRemember.checked) localStorage.setItem("residentUser", JSON.stringify({username,password}));
+      else localStorage.removeItem("residentUser");
+      if(user.type==="resident") window.location.href="site.html";
+      else msg.textContent="Yetki hatalı!";
+    }
+
+  } catch(err){
+    console.error(err);
+    msg.textContent="Bağlantı hatası!";
+  }
 }
 
-closeScanner.addEventListener('click', ()=>{
-  if(qrScanner) qrScanner.stop();
-  qrModal.style.display='none';
-});
-
-/* === Firebase'den QR noktalarını dinle === */
-const qrCodesRef = ref(db,'qrCodes');
-onValue(qrCodesRef, snapshot=>{
-  const val = snapshot.val();
-  qrListContainer.innerHTML='';
-  if(val){
-    Object.values(val).forEach(point=>{
-      const div = document.createElement('div');
-      const btn = document.createElement('button');
-      btn.classList.add('qrBtn');
-      btn.dataset.qrid = point.qrId;
-      btn.dataset.point = point.name;
-      btn.innerText = "QR Okut";
-
-      const span = document.createElement('span');
-      span.innerText = point.name;
-
-      div.appendChild(btn);
-      div.appendChild(span);
-      qrListContainer.appendChild(div);
-
-      btn.addEventListener('click', ()=>{
-        startScanner(point.name, btn);
-      });
-    });
-  }
-});
+// Login butonları
+document.getElementById("secLoginBtn").addEventListener("click", ()=>{ loginUser(secUsername.value, secPassword.value, "security"); });
+document.getElementById("resLoginBtn").addEventListener("click", ()=>{ loginUser(resUsername.value, resPassword.value, "resident"); });
+adminLoginBtn.addEventListener("click", ()=>{ loginUser(adminUsername.value, adminPassword.value, "admin"); });
 </script>
+
 </body>
 </html>
